@@ -15,10 +15,44 @@
 # limitations under the License.
 #
 import webapp2
+import cgi
+
+
+top = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Rotater</title>
+</head>
+<body>
+"""
+
+bottom = """
+</body>
+</html>
+"""
+
+
+def password_validation(entered,truepass):
+    if entered == truepass:
+        return True
+    return False
+
+    #Make a username validator using cgi
+
+    #Make email validaion
+
+    #Make 4 input fields, with four values to correspond with validation
+
+    #Greet the user when they hit submit
+
+big_title = """<h1>Signup</h1>"""
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write('Hello world!')
+
+
+
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
