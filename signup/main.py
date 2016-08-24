@@ -23,6 +23,11 @@ top = """
 <html>
 <head>
     <title>Signup</title>
+    <style>
+        input:invalid{
+        border : 2px solid red
+        }
+    </style>
 </head>
 <body>
 """
@@ -34,13 +39,13 @@ bottom = """
 
 
 #Errors
-username_problems = top + "<h3>Your username is invalid. Please, don't use spaces or any coding of your own...</h3>" + bottom
-mail_problems = top + "The email address you entered is not or  valid. Please do not use a temporary host or a host that will filter out our mail." + bottom
-password_problems = top + "Your passwords do not match. Please try again." + bottom
+username_problems = top + "<p>Your username is invalid. Please, don't use spaces or any coding of your own...</p>" + bottom
+mail_problems = top + "<p>The email address you entered is not or  valid. Please do not use a temporary host or a host that will filter out our mail.</p>" + bottom
+password_problems = top + "<p>Your passwords do not match. Please try again.</p>" + bottom
 
 
 def password_validation(entered,truepass):
-    if entered == truepass:
+    if entered == truepass and not entered == "":
         return True
     return False
 
@@ -50,8 +55,12 @@ def username_validation(user):
     return False
 
 def email_validation(email):
-    if cgi.escape(email) == True:
-        return False
+    essentials = [".com",".org",".biz",".edu",".net",".gov","@","."]
+    for element in essentials:
+        if element in email:
+            return True
+        else:
+            return False
     bad_things = ["mvrht.com","zasod.com","my10minutemail.com","hellokitty.com", " "]
     for thing in bad_things:
         if thing in email:
@@ -73,7 +82,7 @@ class Homepage(webapp2.RequestHandler):
         forms = """
         <form method="post" action="/greetings">
             <label> Enter Username
-                <input type="text" name="user">
+                <input type="text" name="user" value=user>
             </label>
             <br>
             <label> Enter Password
@@ -85,7 +94,7 @@ class Homepage(webapp2.RequestHandler):
             </label>
             <br>
             <label> (Optional) Enter Email
-                <input type="text" name="email">
+                <input type="text" name="email" value="email">
             </label>
             <input type="submit">
         </form>
@@ -108,9 +117,9 @@ class Greetings(webapp2.RequestHandler):
             if password == True:
                 if mail == True:
                     greetings = """
-                    <h3>Welcome,</h3>
+                    <h3>Welcome,
                     """
-                    final = top + greetings + "<h3>" + self.request.get("user") + "</h3>" + bottom
+                    final = top + greetings + self.request.get("user") + "!</h3>" + bottom
                     self.response.write(final)
                 else:
                     self.response.write(mail_problems)
