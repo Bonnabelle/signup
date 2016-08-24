@@ -22,7 +22,7 @@ top = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>The Rotater</title>
+    <title>Signup</title>
 </head>
 <body>
 """
@@ -33,11 +33,30 @@ bottom = """
 """
 
 
+#Errors
+username_problems = top + "<h3>Your username is invalid. Please, don't use spaces or any coding of your own...</h3>" + bottom
+mail_problems = top + "The email address you entered is not or  valid. Please do not use a temporary host or a host that will filter out our mail." + bottom
+password_problems = top + "Your passwords do not match. Please try again." + bottom
+
+
 def password_validation(entered,truepass):
     if entered == truepass:
         return True
     return False
 
+def username_validation(user):
+    if " " not in user and not user == "":
+        return True
+    return False
+
+def email_validation(email):
+    if cgi.escape(email) == True:
+        return False
+    bad_things = ["mvrht.com","zasod.com","my10minutemail.com","hellokitty.com", " "]
+    for thing in bad_things:
+        if thing in email:
+            return False
+    return True
     #Make a username validator using cgi
 
     #Make email validaion
@@ -48,12 +67,66 @@ def password_validation(entered,truepass):
 
 big_title = """<h1>Signup</h1>"""
 
-class MainHandler(webapp2.RequestHandler):
+class Homepage(webapp2.RequestHandler):
+
     def get(self):
+        forms = """
+        <form method="post" action="/greetings">
+            <label> Enter Username
+                <input type="text" name="user">
+            </label>
+            <br>
+            <label> Enter Password
+                <input type="password" name="truepass">
+            </label>
+            <br>
+            <label> Confirm Password
+                <input type="password" name="entered">
+            </label>
+            <br>
+            <label> (Optional) Enter Email
+                <input type="text" name="email">
+            </label>
+            <input type="submit">
+        </form>
+            """
+
+        final = top + big_title + forms + bottom
+        self.response.write(final)
+
+
+class Greetings(webapp2.RequestHandler):
+
+    def post(self):
+        tbe = self.request.get("user") #To-Be-Escaped
+        tbe = cgi.escape(tbe, quote=True)
+        password = password_validation(self.request.get("truepass"),self.request.get("entered"))
+        user = username_validation(tbe)
+        mail = email_validation(self.request.get("email"))
+
+        if user == True:
+            if password == True:
+                if mail == True:
+                    greetings = """
+                    <h3>Welcome,</h3>
+                    """
+                    final = top + greetings + "<h3>" + self.request.get("user") + "</h3>" + bottom
+                    self.response.write(final)
+                else:
+                    self.response.write(mail_problems)
+                    self.redirect("/?error=mail_error")
+            else:
+                self.response.write(password_problems)
+                self.redirect("/?error=pass_error")
+        else:
+            self.response.write(username_problems)
+            self.redirect("/?error=name_error")
+
 
 
 
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/', Homepage),
+    ('/greetings',Greetings)
 ], debug=True)
