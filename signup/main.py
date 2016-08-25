@@ -54,27 +54,29 @@ def email_validation(email):
 
 big_title = """<h1>Signup</h1>"""
 
+data = []
+
 forms = """
 <div>
-    <form method="post" action="/">
+    <form method="get" action="/greetings">
         <label> Enter Username
             <input type="text" name="user" value="%(user)s" required />
-            <span style="color: red">%(error)s</span>
+            <span class="error" style="color: red">%(error)s</span>
         </label>
         <br>
         <label> Enter Password
             <input type="password" name="truepass" required placeholder="Enter a password."/>
-            <span style="color: red">%(error)s</span>
+            <span class="error" style="color: red">%(error)s</span>
         </label>
         <br>
         <label> Confirm Password
             <input type="password" name="entered" required placeholder="Confirm password."/>
-            <span style="color: red">%(error)s</span>
+            <span class="error" style="color: red">%(error)s</span>
         </label>
         <br>
         <label> (Optional) Enter Email
             <input type="email" name="email" value="%(email)s" placeholder="Enter an email, if you'd like.">
-            <span style="color: red">%(error)s</span>
+            <span class="error" style="color: red">%(error)s</span>
         </label>
         <br>
         <a href=?username=%(user)s">
@@ -91,7 +93,11 @@ class Homepage(webapp2.RequestHandler):
     def get(self):
         self.write_page()
 
-    def post(self):
+class Greetings(webapp2.RequestHandler):
+    def write_page(self,error="",user="",email=""):
+        self.response.out.write(top + big_title + forms % {"error":error, "user":user, "email":email} + bottom)
+
+    def get(self):
         tbe = self.request.get("user") #To-Be-Escaped
         tbe = cgi.escape(tbe, quote=True)
         password1 = self.request.get("truepass")
@@ -106,21 +112,29 @@ class Homepage(webapp2.RequestHandler):
 
         if tbe_valid == False:
             self.write_page("Your username is invalid.",tbe,mail)
+            return
         if pass_valid == False:
             self.write_page("Your password is invalid. Please try again.",tbe,mail)
             return
         if mail_validation == False:
             self.write_page("This email address cannot be used. Make sure you are not providing a temporary host address, or a spam email.",tbe,mail)
             return
-        else:
-            greetings = """
-                <h3>Welcome,
-                """
-            final = top + greetings + tbe + "!</h3>" + bottom
-            self.response.write(final)
+
+        tbe = self.request.get("user") #To-Be-Escaped
+        tbe = cgi.escape(tbe, quote=True)
+        data = []
+        data.append(tbe)
+        greetings = """
+            <h3>Welcome,
+            """
+        final = top + greetings + tbe + "!</h3>" + bottom
+        self.response.write(final)
+
+
 
 
 
 app = webapp2.WSGIApplication([
-    ('/', Homepage)
+    ('/', Homepage),
+    ('/greetings',Greetings)
 ], debug=True)
