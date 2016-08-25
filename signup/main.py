@@ -54,8 +54,6 @@ def email_validation(email):
 
 big_title = """<h1>Signup</h1>"""
 
-data = []
-
 forms = """
 <div>
     <form method="get" action="/greetings">
