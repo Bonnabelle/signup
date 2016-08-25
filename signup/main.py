@@ -23,11 +23,6 @@ top = """
 <html>
 <head>
     <title>Signup</title>
-    <style>
-        input:invalid{
-        border : 2px solid red
-        }
-    </style>
 </head>
 <body>
 """
@@ -37,15 +32,8 @@ bottom = """
 </html>
 """
 
-
-#Errors
-username_problems = top + "<p>Your username is invalid. Please, don't use spaces or any coding of your own...</p>" + bottom
-mail_problems = top + "<p>The email address you entered is not or  valid. Please do not use a temporary host or a host that will filter out our mail.</p>" + bottom
-password_problems = top + "<p>Your passwords do not match. Please try again.</p>" + bottom
-
-
-def password_validation(entered,truepass):
-    if entered == truepass and not entered == "":
+def password_validation(truepass,entered):
+    if truepass != "" and not " " in truepass and entered == truepass:
         return True
     return False
 
@@ -55,87 +43,84 @@ def username_validation(user):
     return False
 
 def email_validation(email):
+    if email == "":
+        return True
     essentials = [".com",".org",".biz",".edu",".net",".gov","@","."]
     for element in essentials:
         if element in email:
             return True
         else:
             return False
-    bad_things = ["mvrht.com","zasod.com","my10minutemail.com","hellokitty.com", " "]
-    for thing in bad_things:
-        if thing in email:
-            return False
-    return True
-    #Make a username validator using cgi
-
-    #Make email validaion
-
-    #Make 4 input fields, with four values to correspond with validation
-
-    #Greet the user when they hit submit
 
 big_title = """<h1>Signup</h1>"""
 
+forms = """
+<div>
+    <form method="post" action="/">
+        <label> Enter Username
+            <input type="text" name="user" value="%(user)s" required />
+            <span style="color: red">%(error)s</span>
+        </label>
+        <br>
+        <label> Enter Password
+            <input type="password" name="truepass" required placeholder="Enter a password."/>
+            <span style="color: red">%(error)s</span>
+        </label>
+        <br>
+        <label> Confirm Password
+            <input type="password" name="entered" required placeholder="Confirm password."/>
+            <span style="color: red">%(error)s</span>
+        </label>
+        <br>
+        <label> (Optional) Enter Email
+            <input type="email" name="email" value="%(email)s" placeholder="Enter an email, if you'd like.">
+            <span style="color: red">%(error)s</span>
+        </label>
+        <br>
+        <a href=?username=%(user)s">
+            <input type="submit">
+        </a>
+    </form>
+</div>
+    """
+
 class Homepage(webapp2.RequestHandler):
+    def write_page(self,error="",user="",email=""):
+        self.response.out.write(top + big_title + forms % {"error":error, "user":user, "email":email} + bottom)
 
     def get(self):
-        forms = """
-        <form method="post" action="/greetings">
-            <label> Enter Username
-                <input type="text" name="user" value=user>
-            </label>
-            <br>
-            <label> Enter Password
-                <input type="password" name="truepass">
-            </label>
-            <br>
-            <label> Confirm Password
-                <input type="password" name="entered">
-            </label>
-            <br>
-            <label> (Optional) Enter Email
-                <input type="text" name="email" value="email">
-            </label>
-            <input type="submit">
-        </form>
-            """
-
-        final = top + big_title + forms + bottom
-        self.response.write(final)
-
-
-class Greetings(webapp2.RequestHandler):
+        self.write_page()
 
     def post(self):
         tbe = self.request.get("user") #To-Be-Escaped
         tbe = cgi.escape(tbe, quote=True)
-        password = password_validation(self.request.get("truepass"),self.request.get("entered"))
-        user = username_validation(tbe)
-        mail = email_validation(self.request.get("email"))
+        password1 = self.request.get("truepass")
+        password2 = self.request.get("entered")
+        mail = self.request.get("email")
 
-        if user == True:
-            if password == True:
-                if mail == True:
-                    greetings = """
-                    <h3>Welcome,
-                    """
-                    final = top + greetings + self.request.get("user") + "!</h3>" + bottom
-                    self.response.write(final)
-                else:
-                    self.response.write(mail_problems)
-                    self.redirect("/?error=mail_error")
-            else:
-                self.response.write(password_problems)
-                self.redirect("/?error=pass_error")
+        tbe_valid = username_validation(tbe)
+        pass_valid = password_validation(password1,password2)
+        mail_validation = email_validation(mail)
+
+
+
+        if tbe_valid == False:
+            self.write_page("Your username is invalid.",tbe,mail)
+        if pass_valid == False:
+            self.write_page("Your password is invalid. Please try again.",tbe,mail)
+            return
+        if mail_validation == False:
+            self.write_page("This email address cannot be used. Make sure you are not providing a temporary host address, or a spam email.",tbe,mail)
+            return
         else:
-            self.response.write(username_problems)
-            self.redirect("/?error=name_error")
-
-
+            greetings = """
+                <h3>Welcome,
+                """
+            final = top + greetings + tbe + "!</h3>" + bottom
+            self.response.write(final)
 
 
 
 app = webapp2.WSGIApplication([
-    ('/', Homepage),
-    ('/greetings',Greetings)
+    ('/', Homepage)
 ], debug=True)
