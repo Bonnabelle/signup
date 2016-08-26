@@ -59,25 +59,24 @@ forms = """
     <form method="get" action="/greetings">
         <label> Enter Username
             <input type="text" name="user" value="%(user)s" required />
-            <span class="error" style="color: red">%(error)s</span>
+            <span class="error" style="color: red">%(user_error)s</span>
         </label>
         <br>
         <label> Enter Password
             <input type="password" name="truepass" required placeholder="Enter a password."/>
-            <span class="error" style="color: red">%(error)s</span>
+            <span class="error" style="color: red">%(pass_error)s</span>
         </label>
         <br>
         <label> Confirm Password
             <input type="password" name="entered" required placeholder="Confirm password."/>
-            <span class="error" style="color: red">%(error)s</span>
+            <span class="error" style="color: red">%(pass_error)s</span>
         </label>
         <br>
         <label> (Optional) Enter Email
             <input type="email" name="email" value="%(email)s" placeholder="Enter an email, if you'd like.">
-            <span class="error" style="color: red">%(error)s</span>
+            <span class="error" style="color: red">%(mail_error)s</span>
         </label>
-        <br>
-        <a href=?username=%(user)s">
+        <br>-
             <input type="submit">
         </a>
     </form>
@@ -85,17 +84,21 @@ forms = """
     """
 
 class Homepage(webapp2.RequestHandler):
-    def write_page(self,error="",user="",email=""):
-        self.response.out.write(top + big_title + forms % {"error":error, "user":user, "email":email} + bottom)
+    def write_page(self,user_error="",pass_error="",mail_error="",user="",email=""):
+        self.response.out.write(top + big_title + forms % {"user_error":user_error,"pass_error":pass_error,"mail_error":mail_error, "user":user, "email":email} + bottom)
 
     def get(self):
         self.write_page()
 
 class Greetings(webapp2.RequestHandler):
-    def write_page(self,error="",user="",email=""):
-        self.response.out.write(top + big_title + forms % {"error":error, "user":user, "email":email} + bottom)
+    def write_page(self,user_error="",pass_error="",mail_error="",user="",email=""):
+        self.response.out.write(top + big_title + forms % {"user_error":user_error,"pass_error":pass_error,"mail_error":mail_error, "user":user, "email":email} + bottom)
 
     def get(self):
+        user_error = ""
+        pass_error = ""
+        mail_error = ""
+
         tbe = self.request.get("user") #To-Be-Escaped
         tbe = cgi.escape(tbe, quote=True)
         password1 = self.request.get("truepass")
@@ -106,16 +109,17 @@ class Greetings(webapp2.RequestHandler):
         pass_valid = password_validation(password1,password2)
         mail_validation = email_validation(mail)
 
-
-
         if tbe_valid == False:
-            self.write_page("Your username is invalid.",tbe,mail)
+            user_error = "Your username is invalid."
+            self.write_page(user_error,pass_error,mail_error,tbe,mail)
             return
         if pass_valid == False:
-            self.write_page("Your password is invalid. Please try again.",tbe,mail)
+            pass_error = "Your password is invalid, or they do not match."
+            self.write_page(user_error,pass_error,mail_error,tbe,mail)
             return
         if mail_validation == False:
-            self.write_page("This email address cannot be used. Make sure you are not providing a temporary host address, or a spam email.",tbe,mail)
+            mail_error = "Your email address is invalid."
+            self.write_page(user_error,pass_error,mail_error,tbe,mail)
             return
 
         tbe = self.request.get("user") #To-Be-Escaped
